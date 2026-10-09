@@ -1,18 +1,22 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
-@section('content')
+@section('title', '{{MODEL_LABEL_PLURAL}}')
+
+@section('dashboard-content')
 <section class="crud-shell">
     <header class="crud-heading">
         <div class="crud-heading-copy">
-            <p class="eyebrow">Data</p>
-            <h1 class="crud-title">{{MODEL_PLURAL}}</h1>
-            <p class="crud-description">Kelola data {{MODEL_PLURAL}}.</p>
+            <h1 class="crud-title">{{MODEL_LABEL_PLURAL}}</h1>
+            <p class="crud-description">Kelola {{MODEL_LABEL_PLURAL}}.</p>
         </div>
-        <a href="{{ route('{{ROUTE_PREFIX}}.create') }}" class="button button-primary">Tambah {{MODEL}}</a>
+        <a href="{{ route('{{ROUTE_PREFIX}}.create') }}" class="button button-primary">Tambah {{MODEL_LABEL}}</a>
     </header>
 
     @if (session('success'))
         <p class="flash-success" role="status">{{ session('success') }}</p>
+    @endif
+    @if (session('error'))
+        <p class="flash-error" role="alert">{{ session('error') }}</p>
     @endif
 
     <div class="crud-summary">
@@ -25,7 +29,7 @@
 
     <div class="table-wrap">
         <table class="barang-table">
-            <caption class="sr-only">Daftar {{MODEL_PLURAL}}</caption>
+            <caption class="sr-only">Daftar {{MODEL_LABEL_PLURAL}}</caption>
             <thead>
                 <tr>
 {{INDEX_HEADERS}}
@@ -36,7 +40,7 @@
                 @forelse (${{MODEL_PLURAL}} as ${{MODEL_VARIABLE}})
                     <tr data-table-row>
 {{INDEX_CELLS}}
-                        <td>
+                        <td class="actions-cell">
                             <div class="table-actions">
                                 <a href="{{ route('{{ROUTE_PREFIX}}.edit', ${{MODEL_VARIABLE}}) }}" class="button button-secondary button-small">Edit</a>
                                 <form method="POST" action="{{ route('{{ROUTE_PREFIX}}.destroy', ${{MODEL_VARIABLE}}) }}" data-confirm="Yakin ingin menghapus data ini?">
@@ -52,8 +56,8 @@
                         <td class="empty-state" colspan="{{INDEX_COLUMN_COUNT}}">
                             <div class="crud-empty-state">
                                 <h2>Belum ada data</h2>
-                                <p>Tambahkan {{MODEL}} pertama.</p>
-                                <a href="{{ route('{{ROUTE_PREFIX}}.create') }}" class="button button-primary">Tambah {{MODEL}}</a>
+                                <p>Belum ada data.</p>
+                                <a href="{{ route('{{ROUTE_PREFIX}}.create') }}" class="button button-primary">Tambah {{MODEL_LABEL}}</a>
                             </div>
                         </td>
                     </tr>

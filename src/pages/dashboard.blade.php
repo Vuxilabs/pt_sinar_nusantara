@@ -1,15 +1,7 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title', 'Dashboard')
+@section('body-class', 'dashboard-page')
 
-@section('content')
-<div class="dashboard-shell">
-    @include('components.dashboard-header')
-
-    <div class="dashboard-workspace">
-        @include('components.dashboard-sidebar')
-
-        <main class="dashboard-main" aria-label="Konten dashboard"></main>
-    </div>
-</div>
+@section('dashboard-content')
 @endsection

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Profile')
+@section('body-class', 'dashboard-page')
 
 @section('content')
 <div class="dashboard-shell">
@@ -9,7 +10,7 @@
     <div class="dashboard-workspace">
         @include('components.dashboard-sidebar')
 
-        <main class="dashboard-main">
+        <main id="profile-main" class="dashboard-main profile-main">
             <section class="profile-content">
                 <div class="profile-heading">
                     <p class="profile-eyebrow">Pengaturan akun</p>

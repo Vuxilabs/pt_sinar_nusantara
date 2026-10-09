@@ -1,12 +1,12 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
-@section('content')
+@section('title', 'Edit {{MODEL_LABEL}}')
+
+@section('dashboard-content')
 <section class="crud-shell narrow-shell">
     <header class="crud-form-heading">
         <a href="{{ route('{{ROUTE_PREFIX}}.index') }}" class="back-link">&larr; Kembali ke daftar</a>
-        <p class="eyebrow">Perbarui data</p>
-        <h1 class="crud-title">Edit {{MODEL}}</h1>
-        <p class="crud-description">Ubah informasi {{MODEL}}.</p>
+        <h1 class="crud-title">Edit {{MODEL_LABEL}}</h1>
     </header>
 
     <form method="POST" action="{{ route('{{ROUTE_PREFIX}}.update', ${{MODEL_VARIABLE}}) }}" class="barang-form">

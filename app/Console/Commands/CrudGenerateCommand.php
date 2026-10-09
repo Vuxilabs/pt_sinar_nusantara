@@ -19,7 +19,7 @@ class CrudGenerateCommand extends Command
     public function handle(): int
     {
         $inputName = Str::snake(trim((string) $this->argument('name')));
-        $modelInput = Str::endsWith($inputName, 's') ? substr($inputName, 0, -1) : $inputName;
+        $modelInput = Str::endsWith($inputName, 's') ? Str::singular($inputName) : $inputName;
         $modelName = Str::studly($modelInput);
         if (! preg_match('/^[A-Z][A-Za-z0-9]*$/', $modelName)) {
             $this->error('Invalid model name. Use a simple class name such as Product.');
@@ -29,7 +29,7 @@ class CrudGenerateCommand extends Command
 
         $tableCandidates = Str::endsWith($inputName, 's')
             ? [$inputName, $modelInput]
-            : [$inputName.'s', $inputName];
+            : [Str::plural($inputName), $inputName];
         $modelVariable = Str::camel($modelName);
         $stubDirectory = base_path('stubs/crud');
         $routeFile = base_path('app/routes/web.php');
@@ -61,6 +61,7 @@ class CrudGenerateCommand extends Command
 
             $columns = Schema::getColumns($table);
             $foreignKeys = Schema::getForeignKeys($table);
+            $indexes = Schema::getIndexes($table);
         } catch (Throwable $exception) {
             $this->error('Unable to inspect database schema: '.$exception->getMessage());
 
@@ -77,6 +78,16 @@ class CrudGenerateCommand extends Command
         }
 
         $relationships = $this->relationships($foreignKeys);
+        $uniqueColumns = [];
+        foreach ($indexes as $index) {
+            if (! ($index['unique'] ?? false) || ($index['primary'] ?? false)) {
+                continue;
+            }
+
+            foreach ($index['columns'] ?? [] as $column) {
+                $uniqueColumns[] = $column;
+            }
+        }
         $relationshipByColumn = [];
         foreach ($relationships as $relationship) {
             $relationshipByColumn[$relationship['column']] = $relationship;
@@ -91,7 +102,7 @@ class CrudGenerateCommand extends Command
 
             $field = [
                 'name' => $name,
-                'label' => Str::headline($name),
+                'label' => $this->columnLabel($name),
                 'type' => $this->inputType($column),
                 'column_type' => $this->columnType($column),
                 'nullable' => (bool) ($column['nullable'] ?? false),
@@ -114,6 +125,7 @@ class CrudGenerateCommand extends Command
             $columns,
             $fields,
             $relationships,
+            $uniqueColumns,
             false,
         );
         $editContext = $this->buildContext(
@@ -125,8 +137,12 @@ class CrudGenerateCommand extends Command
             $columns,
             $fields,
             $relationships,
+            $uniqueColumns,
             true,
         );
+        $controllerContext = array_merge($createContext, [
+            '{{UPDATE_VALIDATION_RULES}}' => $editContext['{{UPDATE_VALIDATION_RULES}}'],
+        ]);
         $files = [
             app_path("Models/{$modelName}.php") => 'model',
             app_path("Http/Controllers/{$modelName}Controller.php") => 'controller',
@@ -151,9 +167,12 @@ class CrudGenerateCommand extends Command
             }
 
             File::ensureDirectoryExists(dirname($path));
-            $templateContext = in_array($stubName, ['create', 'edit'], true)
-                ? ($stubName === 'edit' ? $editContext : $createContext)
-                : $createContext;
+            $templateContext = match ($stubName) {
+                'create' => $createContext,
+                'edit' => $editContext,
+                'controller' => $controllerContext,
+                default => $createContext,
+            };
             $contents = strtr(File::get("{$stubDirectory}/{$stubName}.stub"), $templateContext);
             File::put($path, $contents);
             $this->line("  <fg=green>✓</> {$relativePath} created");
@@ -247,6 +266,7 @@ class CrudGenerateCommand extends Command
         array $columns,
         array $fields,
         array $relationships,
+        array $uniqueColumns,
         bool $isEdit = false,
     ): array {
         $fillable = [];
@@ -269,9 +289,18 @@ class CrudGenerateCommand extends Command
         foreach ($fields as $field) {
             $rules = [];
             $rules[] = $field['nullable'] ? "'nullable'" : ($field['has_default'] ? "'sometimes'" : "'required'");
-            $typeRule = $this->validationType($field['column_type']);
+            $typeRule = $field['type'] === 'checkbox'
+                ? 'boolean'
+                : $this->validationType($field['column_type']);
             if ($typeRule !== null) {
                 $rules[] = "'{$typeRule}'";
+            }
+            if (in_array($field['name'], $uniqueColumns, true)) {
+                $uniqueRule = "Rule::unique('{$table}', '{$field['name']}')";
+                if ($isEdit) {
+                    $uniqueRule .= "->ignore(\${$modelVariable}->getKey())";
+                }
+                $rules[] = $uniqueRule;
             }
             if (isset($field['relationship'])) {
                 $relationship = $field['relationship'];
@@ -283,13 +312,30 @@ class CrudGenerateCommand extends Command
         $formFields = $this->formFields($fields, $modelVariable, $isEdit);
         $indexHeaders = [];
         $indexCells = [];
+        $indexRelationships = [];
         foreach ($fields as $field) {
             $indexHeaders[] = '                    <th>'.e($field['label']).'</th>';
-            $indexCells[] = "                    <td>{{ \${$modelVariable}->{".var_export($field['name'], true).'} }}</td>';
+            if (isset($field['relationship'])) {
+                $relationship = $field['relationship'];
+                $indexRelationships[] = $relationship['method'];
+                $indexCells[] = "                    <td>{{ \${$modelVariable}->{$relationship['method']}?->{".var_export($relationship['display_column'], true)."} ?? '—' }}</td>";
+            } else {
+                $indexCells[] = "                    <td>{{ \${$modelVariable}->{".var_export($field['name'], true).'} }}</td>';
+            }
         }
+
+        $modelLabel = $this->modelLabel($modelName);
+        $modelPluralLabel = $this->tableLabel($table);
+        $validationRules = implode("\n", $validationRules);
+        $indexRelationships = array_values(array_unique($indexRelationships));
+        $eagerLoad = $indexRelationships === []
+            ? ''
+            : '->with(['.implode(', ', array_map(fn (string $relation) => var_export($relation, true), $indexRelationships)).'])';
 
         return [
             '{{MODEL}}' => $modelName,
+            '{{MODEL_LABEL}}' => $modelLabel,
+            '{{MODEL_LABEL_PLURAL}}' => $modelPluralLabel,
             '{{MODEL_VARIABLE}}' => $modelVariable,
             '{{MODEL_PLURAL}}' => Str::plural($modelVariable),
             '{{TABLE}}' => $table,
@@ -303,12 +349,47 @@ class CrudGenerateCommand extends Command
             '{{RELATIONSHIPS}}' => $relationshipCode === [] ? '' : "\n\n".implode("\n\n", $relationshipCode)."\n",
             '{{FOREIGN_IMPORTS}}' => $relationships !== [] ? "\nuse Illuminate\\Support\\Facades\\DB;\n" : '',
             '{{FOREIGN_DATA}}' => implode("\n", $foreignData),
-            '{{VALIDATION_RULES}}' => implode("\n", $validationRules),
+            '{{INDEX_RELATIONSHIPS}}' => $eagerLoad,
+            '{{STORE_VALIDATION_RULES}}' => $isEdit ? '' : $validationRules,
+            '{{UPDATE_VALIDATION_RULES}}' => $isEdit ? $validationRules : '',
             '{{FORM_FIELDS}}' => implode("\n", $formFields),
             '{{INDEX_HEADERS}}' => implode("\n", $indexHeaders),
             '{{INDEX_CELLS}}' => implode("\n", $indexCells),
             '{{INDEX_COLUMN_COUNT}}' => (string) (count($fields) + 1),
         ];
+    }
+
+    private function modelLabel(string $modelName): string
+    {
+        return match (Str::lower($modelName)) {
+            'barang' => 'Barang',
+            'category' => 'Kategori',
+            default => Str::headline($modelName),
+        };
+    }
+
+    private function tableLabel(string $table): string
+    {
+        return match (Str::lower($table)) {
+            'barangs' => 'Barang',
+            'categories' => 'Kategori',
+            default => Str::headline(Str::plural(Str::singular($table))),
+        };
+    }
+
+    private function columnLabel(string $column): string
+    {
+        return match (Str::lower($column)) {
+            'sku' => 'SKU',
+            'nama' => 'Nama barang',
+            'name' => 'Nama',
+            'category_id' => 'Kategori',
+            'satuan' => 'Satuan',
+            'harga_pokok' => 'Harga pokok',
+            'harga_jual' => 'Harga jual',
+            'aktif', 'is_active', 'active', 'enabled', 'is_enabled' => 'Aktif',
+            default => Str::headline($column),
+        };
     }
 
     private function formFields(array $fields, string $modelVariable, bool $isEdit = false): array
@@ -347,7 +428,10 @@ class CrudGenerateCommand extends Command
 
                 continue;
             } else {
-                $control = "<input type=\"{$field['type']}\" name=\"{$escapedName}\" value=\"{{ {$valueExpression} }}\"{$required} class=\"crud-input\">";
+                $step = in_array($field['column_type'], ['decimal', 'numeric', 'float', 'double', 'real'], true)
+                    ? ' step="any"'
+                    : '';
+                $control = "<input type=\"{$field['type']}\" name=\"{$escapedName}\" value=\"{{ {$valueExpression} }}\"{$step}{$required} class=\"crud-input\">";
             }
 
             $lines[] = "    <label class=\"crud-field\">\n        {$label}\n        {$control}\n        @error({$phpName})<span class=\"form-error\">{{ \$message }}</span>@enderror\n    </label>";
@@ -369,7 +453,7 @@ class CrudGenerateCommand extends Command
         $name = strtolower((string) ($column['name'] ?? ''));
 
         return match (true) {
-            in_array($type, ['bool', 'boolean'], true) => 'checkbox',
+            in_array($type, ['bool', 'boolean'], true), in_array($name, ['aktif', 'is_active', 'active', 'enabled', 'is_enabled'], true) => 'checkbox',
             $name === 'email' => 'email',
             $type === 'date' => 'date',
             in_array($type, ['datetime', 'datetime2', 'timestamp'], true) => 'datetime-local',
@@ -431,7 +515,7 @@ class CrudGenerateCommand extends Command
         }
 
         if (! $routeExists) {
-            $routeLine = "Route::resource('{$routePrefix}', \\App\\Http\\Controllers\\{$modelName}Controller::class);";
+            $routeLine = "Route::middleware(['auth', 'role:admin'])->group(function () {\n    Route::resource('{$routePrefix}', \\App\\Http\\Controllers\\{$modelName}Controller::class);\n});";
             $content = rtrim($content)."\n\n{$routeLine}\n";
         }
 

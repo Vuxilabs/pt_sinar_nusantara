@@ -1,12 +1,12 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
-@section('content')
+@section('title', 'Tambah {{MODEL_LABEL}}')
+
+@section('dashboard-content')
 <section class="crud-shell narrow-shell">
     <header class="crud-form-heading">
         <a href="{{ route('{{ROUTE_PREFIX}}.index') }}" class="back-link">&larr; Kembali ke daftar</a>
-        <p class="eyebrow">Data baru</p>
-        <h1 class="crud-title">Tambah {{MODEL}}</h1>
-        <p class="crud-description">Isi informasi {{MODEL}}.</p>
+        <h1 class="crud-title">Tambah {{MODEL_LABEL}}</h1>
     </header>
 
     <form method="POST" action="{{ route('{{ROUTE_PREFIX}}.store') }}" class="barang-form">

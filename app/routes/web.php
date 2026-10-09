@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 PageRouter::register([
-    'exclude' => ['login'],
+    'exclude' => ['login', 'categories', 'categories/*', 'barangs', 'barangs/*'],
     'middleware' => ['web', 'auth'],
 ]);
 
@@ -60,3 +60,11 @@ Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'dest
 Route::put('/dashboard/profile', [\App\Http\Controllers\ProfileController::class, 'update'])
     ->middleware('auth')
     ->name('profile.update');
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::resource('categories', \App\Http\Controllers\CategoryController::class);
+});
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::resource('barangs', \App\Http\Controllers\BarangController::class);
+});

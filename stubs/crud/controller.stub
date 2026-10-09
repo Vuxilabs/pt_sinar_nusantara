@@ -6,6 +6,7 @@ use App\Models\{{MODEL}};
 use App\Support\Frontend;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 {{FOREIGN_IMPORTS}}
 class {{MODEL}}Controller extends Controller
@@ -13,7 +14,7 @@ class {{MODEL}}Controller extends Controller
     public function index(): View
     {
         return Frontend::render('{{PAGE_DIRECTORY}}.index', '{{PAGE_DIRECTORY}}.index', [
-            '{{MODEL_PLURAL}}' => {{MODEL}}::query()->paginate(15),
+            '{{MODEL_PLURAL}}' => {{MODEL}}::query(){{INDEX_RELATIONSHIPS}}->paginate(15),
         ]);
     }
 
@@ -27,7 +28,7 @@ class {{MODEL}}Controller extends Controller
     public function store(Request $request): RedirectResponse
     {
         {{MODEL}}::create($request->validate([
-{{VALIDATION_RULES}}
+{{STORE_VALIDATION_RULES}}
         ]));
 
         return redirect()->route('{{ROUTE_PREFIX}}.index')->with('success', 'Data berhasil ditambahkan.');
@@ -49,7 +50,7 @@ class {{MODEL}}Controller extends Controller
     public function update(Request $request, {{MODEL}} ${{MODEL_VARIABLE}}): RedirectResponse
     {
         ${{MODEL_VARIABLE}}->update($request->validate([
-{{VALIDATION_RULES}}
+{{UPDATE_VALIDATION_RULES}}
         ]));
 
         return redirect()->route('{{ROUTE_PREFIX}}.index')->with('success', 'Data berhasil diperbarui.');

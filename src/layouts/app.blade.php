@@ -18,7 +18,7 @@
         @vite(['src/assets/css/app.css', 'src/assets/js/app.js'])
     @endif
 </head>
-<body class="min-h-screen bg-white text-neutral-900 antialiased">
+<body class="min-h-screen bg-white text-neutral-900 antialiased @yield('body-class')">
     <main id="page-view" data-page="{{ $frontendPage ?? '' }}">
         @yield('content')
     </main>
