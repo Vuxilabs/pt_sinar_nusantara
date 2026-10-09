@@ -48,12 +48,13 @@ class InventoryStock
             ->get();
     }
 
-    public function balances(): Collection
+    public function balances(?string $throughDate = null): Collection
     {
         $receipts = DB::table('inventory_transaction_items as lines')
             ->join('inventory_transactions as transactions', 'transactions.id', '=', 'lines.inventory_transaction_id')
             ->where('transactions.status', 'posted')
             ->where('transactions.type', 'receipt')
+            ->when($throughDate !== null, fn ($query) => $query->whereDate('transactions.occurred_at', '<=', $throughDate))
             ->select('lines.barang_id', 'transactions.warehouse_id')
             ->selectRaw('lines.quantity AS quantity');
 
@@ -61,6 +62,7 @@ class InventoryStock
             ->join('inventory_transactions as transactions', 'transactions.id', '=', 'lines.inventory_transaction_id')
             ->where('transactions.status', 'posted')
             ->where('transactions.type', 'sale')
+            ->when($throughDate !== null, fn ($query) => $query->whereDate('transactions.occurred_at', '<=', $throughDate))
             ->select('lines.barang_id', 'transactions.warehouse_id')
             ->selectRaw('-lines.quantity AS quantity');
 
@@ -68,6 +70,7 @@ class InventoryStock
             ->join('inventory_transactions as transactions', 'transactions.id', '=', 'lines.inventory_transaction_id')
             ->where('transactions.status', 'posted')
             ->where('transactions.type', 'transfer')
+            ->when($throughDate !== null, fn ($query) => $query->whereDate('transactions.occurred_at', '<=', $throughDate))
             ->select('lines.barang_id', 'transactions.warehouse_id')
             ->selectRaw('-lines.quantity AS quantity');
 
@@ -75,6 +78,7 @@ class InventoryStock
             ->join('inventory_transactions as transactions', 'transactions.id', '=', 'lines.inventory_transaction_id')
             ->where('transactions.status', 'posted')
             ->where('transactions.type', 'transfer')
+            ->when($throughDate !== null, fn ($query) => $query->whereDate('transactions.occurred_at', '<=', $throughDate))
             ->select('lines.barang_id')
             ->selectRaw('transactions.destination_warehouse_id AS warehouse_id')
             ->selectRaw('lines.quantity AS quantity');
