@@ -19,7 +19,7 @@
             <div class="transaction-item-row {{ $type === 'sale' ? 'transaction-sale-row' : '' }}" data-item-row>
                 <label class="crud-field">Nama barang<select class="crud-input" name="items[{{ $index }}][barang_id]" @if($type === 'transfer') data-transfer-barang @endif required><option value="">Pilih barang</option>@foreach($barangs as $barang)<option value="{{ $barang->id }}" data-price="{{ $barang->harga_jual }}" @selected(($oldItem['barang_id'] ?? '') == $barang->id)>{{ $barang->sku }} — {{ $barang->nama }}</option>@endforeach</select>@if($type === 'transfer')<small class="stock-availability" data-stock-availability>Pilih gudang asal dan barang untuk melihat stok.</small>@endif</label>
                 <label class="crud-field">Jumlah<input class="crud-input" type="number" name="items[{{ $index }}][quantity]" min="0.001" step="0.001" value="{{ $oldItem['quantity'] ?? 1 }}" @if($type === 'transfer') data-transfer-quantity @endif required></label>
-                @if($type === 'sale')<label class="crud-field">Harga satuan<input class="crud-input" type="number" name="items[{{ $index }}][unit_price]" min="0" step="0.01" value="{{ $oldItem['unit_price'] ?? '' }}" required></label>@endif
+                @if($type === 'sale')<label class="crud-field">Harga satuan<input class="crud-input" type="number" name="items[{{ $index }}][unit_price]" min="0" step="" value="{{ $oldItem['unit_price'] ?? '' }}" required></label>@endif
                 <button class="button button-secondary button-small" type="button" data-remove-item>Hapus</button>
                 @foreach(['barang_id','quantity','unit_price'] as $field)@error("items.$index.$field")<small class="form-error">{{ $message }}</small>@enderror @endforeach
             </div>
@@ -32,7 +32,7 @@
     <template data-item-template><div class="transaction-item-row {{ $type === 'sale' ? 'transaction-sale-row' : '' }}" data-item-row>
         <label class="crud-field">Nama barang<select class="crud-input" data-name="barang_id" @if($type === 'transfer') data-transfer-barang @endif required><option value="">Pilih barang</option>@foreach($barangs as $barang)<option value="{{ $barang->id }}" data-price="{{ $barang->harga_jual }}">{{ $barang->sku }} — {{ $barang->nama }}</option>@endforeach</select>@if($type === 'transfer')<small class="stock-availability" data-stock-availability>Pilih gudang asal dan barang untuk melihat stok.</small>@endif</label>
         <label class="crud-field">Jumlah<input class="crud-input" data-name="quantity" type="number" min="0.001" step="0.001" value="1" @if($type === 'transfer') data-transfer-quantity @endif required></label>
-        @if($type === 'sale')<label class="crud-field">Harga satuan<input class="crud-input" data-name="unit_price" type="number" min="0" step="0.01" required></label>@endif
+        @if($type === 'sale')<label class="crud-field">Harga satuan<input class="crud-input" data-name="unit_price" type="number" min="0" step="" required></label>@endif
         <button class="button button-secondary button-small" type="button" data-remove-item>Hapus</button>
     </div></template>
 </section>

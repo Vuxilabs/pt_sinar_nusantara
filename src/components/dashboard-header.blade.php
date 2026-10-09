@@ -6,16 +6,16 @@
         <span>PT Sinar Nusantara</span>
     </a>
 
-    <nav class="dashboard-top-nav" aria-label="Navigasi utama">
+    <!-- <nav class="dashboard-top-nav" aria-label="Navigasi utama">
         <a href="{{ route('pages.dashboard') }}">Overview</a>
         <a class="dashboard-add-link" href="#add" aria-label="Tambah">+</a>
-    </nav>
+    </nav> -->
 
     <nav class="dashboard-utility-nav" aria-label="Menu akun">
-        <a class="dashboard-icon-link dashboard-notifications" href="#notifications" aria-label="Notifikasi">
+        <!-- <a class="dashboard-icon-link dashboard-notifications" href="#notifications" aria-label="Notifikasi">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v13H3zM3 7l9 7 9-7" /></svg>
             <span>0</span>
-        </a>
+        </a> -->
         <details class="dashboard-profile-menu">
             <summary class="dashboard-avatar" aria-label="Buka menu profil">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
