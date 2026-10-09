@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\MinifyHtmlMiddleware;
+use App\Http\Middleware\EnsureUserHasRole;
 use App\Console\Commands\MakeMigrationCommand;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,6 +16,9 @@ $app = Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([MakeMigrationCommand::class])
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'role' => EnsureUserHasRole::class,
+        ]);
         $middleware->web(append: [
             MinifyHtmlMiddleware::class,
         ]);

@@ -24,8 +24,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 PageRouter::register([
-    'exclude' => ['mahasiswas', 'mahasiswas/*', 'kelas', 'kelas/*', 'siswas', 'siswas/*'],
-    'middleware' => ['web'],
+    'exclude' => ['login'],
+    'middleware' => ['web', 'auth'],
 ]);
 
 /*
@@ -46,6 +46,11 @@ PageRouter::register([
 |
 */
 
-Route::resource('kelas', \App\Http\Controllers\KelaController::class);
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [\App\Http\Controllers\Auth\LoginController::class, 'create'])->name('login');
+    Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'store'])->name('login.store');
+});
 
-Route::resource('siswas', \App\Http\Controllers\SiswaController::class);
+Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
