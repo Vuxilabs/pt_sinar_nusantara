@@ -364,6 +364,8 @@ class CrudGenerateCommand extends Command
         return match (Str::lower($modelName)) {
             'barang' => 'Barang',
             'category' => 'Kategori',
+            'warehouse' => 'Gudang',
+            'customer' => 'Pelanggan',
             default => Str::headline($modelName),
         };
     }
@@ -373,6 +375,8 @@ class CrudGenerateCommand extends Command
         return match (Str::lower($table)) {
             'barangs' => 'Barang',
             'categories' => 'Kategori',
+            'warehouses' => 'Gudang',
+            'customers' => 'Pelanggan',
             default => Str::headline(Str::plural(Str::singular($table))),
         };
     }
@@ -384,6 +388,8 @@ class CrudGenerateCommand extends Command
             'nama' => 'Nama barang',
             'name' => 'Nama',
             'category_id' => 'Kategori',
+            'phone' => 'Nomor telepon',
+            'address' => 'Alamat',
             'satuan' => 'Satuan',
             'harga_pokok' => 'Harga pokok',
             'harga_jual' => 'Harga jual',
