@@ -1,36 +1,20 @@
-# davingm/laravel
+# Sistem Persediaan PT Sinar
 
-Laravel framework project by [davingm](https://github.com/davingm).
+Aplikasi internal untuk mengelola stok barang di beberapa gudang.
 
-## Create a project
+## Fitur
 
-```bash
-composer create-project davingm/laravel app
-cd app
-```
+- Mengelola barang, kategori, gudang, dan pelanggan.
+- Mencatat barang masuk, penjualan, dan transfer antar gudang.
+- Melihat saldo stok dan riwayat transaksi.
+- Melihat laporan stok, barang masuk, dan penjualan dengan filter.
 
-The installer prepares the environment, runs database migrations, and builds the frontend assets.
+Admin dapat mengakses seluruh fitur. Operator dapat mengelola transaksi.
 
-## Development
+## Menjalankan aplikasi
 
-Start the development environment:
+Jalankan server pengembangan dengan:
 
 ```bash
 composer run dev
 ```
-
-Use `php artisan <command>` for Artisan commands, for example `php artisan route:list` or `php artisan test`.
-
-## Frontend
-
-Pages live in `src/pages` and shared layouts live in `src/layouts`. Run `npm run build` to build frontend assets.
-
-## Requirements
-
-- PHP >= 8.3
-- Composer
-- Node.js >= 18
-
-## License
-
-MIT
