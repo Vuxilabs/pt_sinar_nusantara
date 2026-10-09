@@ -28,6 +28,8 @@ PageRouter::register([
     'middleware' => ['web', 'auth'],
 ]);
 
+Route::redirect('/', '/dashboard')->middleware('auth')->name('home');
+
 /*
 |--------------------------------------------------------------------------
 | Manual Route Overrides
@@ -54,3 +56,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
+
+Route::put('/dashboard/profile', [\App\Http\Controllers\ProfileController::class, 'update'])
+    ->middleware('auth')
+    ->name('profile.update');
